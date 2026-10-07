@@ -460,13 +460,15 @@ function coAnHTML(){const D=coData(),k=kcal(),rem=S.kt-k,w=+S.p.w,t=+S.p.tw,w0=S
  rows.push(coRow(HI.fl,D.st>0?`Streak konsistensi kamu <b>${D.st} hari</b> berturut-turut. Konsistensi adalah faktor terbesar keberhasilan jangka panjang.`:'Belum ada streak aktif. Penuhi kalori, puasa dan workout hari ini untuk memulai streak.'));
  return `<div class="ov" onclick="if(event.target==this)coBack()"><div class="sheet n-sh co-an" role="dialog" aria-label="Analisis Wellness Coach"><div class="grab"></div><div class="n-hd"><button class="n-x" aria-label="Tutup" onclick="coBack()">✕</button><b></b><span></span></div>
  <div class="co-c co-hero"><span class="co-i">${SV(HI.bot)}</span><h1 style="font-size:20px;color:#0B1F3F">Analisis Wellness Coach</h1><p style="margin-top:6px;font-size:13px">Analisis ${D.n} hari tercatat (maks. 7 hari) berdasarkan skor, tidur, kalori, puasa &amp; workout kamu.</p></div>
- <div class="co-c co-sc"><div><small>Rata-rata Wellness Score <button type="button" class="co-i2" aria-label="Lihat asal perhitungan Wellness Score" aria-expanded="false" onclick="coInfoT(this)">i</button></small><div class="co-pill" style="background:${pc[0]};color:${pc[1]}">${D.score} <span>/100</span></div></div><div><small>Tren</small><p style="font-size:12px;color:#0B1F3F;margin-top:6px">${tr}</p></div></div>
- <div class="co-c" id="coinfo" style="display:none">${coExpl(D)}</div>
+ <div class="co-c co-sc"><div><small>Rata-rata Wellness Score <button type="button" class="co-i2" aria-label="Lihat asal perhitungan Wellness Score" aria-haspopup="dialog" onclick="coInfoT()">i</button></small><div class="co-pill" style="background:${pc[0]};color:${pc[1]}">${D.score} <span>/100</span></div></div><div><small>Tren</small><p style="font-size:12px;color:#0B1F3F;margin-top:6px">${tr}</p></div></div>
  <div class="co-c" style="padding:4px 16px">${rows.join('')}</div>
  <div class="co-rec"><h3>${SV('<path d="M12 3l1.8 4.7L18.5 9.500l-4.700 1.800L12 16l-1.800-4.700L5.500 9.500l4.700-1.800zM19 15l.8 2.200L22 18l-2.200.8L19 21l-.8-2.200L16 18l2.200-.8z"/>')}Rekomendasi Utama</h3><p>${esc(coRec(D))}</p></div>
  <p style="font-size:11px;margin-top:10px;text-align:center">Panduan umum, bukan pengganti saran tenaga medis.</p>
  <button class="n-bt" onclick="S.coFrom=null;S.sheet='coach';layer()">Tanya Wellness Coach</button></div></div>`}
-function coInfoT(b){const e=$('#coinfo');if(!e)return;const o=e.style.display=='none';e.style.display=o?'block':'none';b.setAttribute('aria-expanded',o);if(o)e.scrollIntoView({block:'nearest',behavior:'smooth'})}
+function coInfoT(){coInfoX();const e=document.createElement('div');e.id='coinfop';e.className='ov c';e.style.zIndex=12;e.onclick=ev=>{if(ev.target==e)coInfoX()};
+ e.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Asal perhitungan Wellness Score" style="padding:16px 18px 18px;max-width:350px;max-height:86%"><div class="row sp" style="justify-content:space-between;margin-bottom:6px"><span class="badge">Wellness Score</span><button class="n-x" aria-label="Tutup" onclick="coInfoX()">✕</button></div>${coExpl(coData())}<button class="n-bt" onclick="coInfoX()">Mengerti</button></div>`;
+ $('#phone').appendChild(e)}
+function coInfoX(){const e=$('#coinfop');if(e)e.remove()}
 function coExpl(D){const d=chk3(0).d,T=woTarget(),kt=S.kt,
  ks=Math.round(Math.max(0,100-Math.abs(d.k-kt)/kt*200)),ss=Math.round(Math.min(100,d.sl/420*100)),ws=Math.round(Math.min(100,d.w/T*100)),fs=d.f===null||d.f===undefined?null:d.f?100:0,
  W=[['Kalori',35,ks,kn(d.k)+' / '+kn(kt)+' kkal','Makin dekat ke target, makin tinggi. Selisih 10% = 80, 25% = 50, ≥50% = 0 (kurang atau lebih sama-sama menurunkan skor).'],
@@ -573,7 +575,7 @@ function layer(){const L=$('#layer'),sh=S.sheet;if(!sh){L.innerHTML='';return}if
  if(sh=='det'){const l=S.items.filter(i=>i.m==S.mt);L.innerHTML=W(S.mt,`<div>${rows(l,d=>`S.edit=${d.id};S.sheet='edit';layer()`)}</div>${tot(l)}<button class="n-bt" onclick="openAdd('${S.mt}')">＋ Tambah makanan</button>`);return}
  if(sh=='cat'){L.innerHTML=W('Daftar Makanan',`<div class="n-seg">${['Semua','Lokal','Internasional'].map(t=>`<button class="${S.flt==t?'on':''}" onclick="S.flt='${t}';layer()">${t}</button>`).join('')}</div><input class="n-q" placeholder="Cari makanan" aria-label="Cari makanan" value="${esc(S.q)}" oninput="S.q=this.value;$('#cl').innerHTML=catRows()"><div id="cl" class="n-cl">${catRows()}</div><div class="n-ft"><span>Terpilih:</span><b id="ct">${selN()} item</b></div><button class="n-bt" onclick="fromCat()">Simpan</button>`,'','n-full')}
 }
-function closeS(){S.fbAct=null;stopCam();woStop();if(S.sheet=='fast'){if(!S.fsSaved&&S.fsBak){S.fs.a=S.fsBak.a;S.fs.b=S.fsBak.b;}S.fsBak=null;S.fsSaved=false}S.sheet=null;S.tmp=null;S.draft=[];S.photo=null;S.busy=false;render()}
+function closeS(){coInfoX();S.fbAct=null;stopCam();woStop();if(S.sheet=='fast'){if(!S.fsSaved&&S.fsBak){S.fs.a=S.fsBak.a;S.fs.b=S.fsBak.b;}S.fsBak=null;S.fsSaved=false}S.sheet=null;S.tmp=null;S.draft=[];S.photo=null;S.busy=false;render()}
 const mac=x=>Math.round(S.items.reduce((a,i)=>a+(i[x]||0),0)*10)/10,selN=()=>Object.values(S.sel).reduce((a,b)=>a+b,0);
 const mi=a=>({n:a[0],e:a[1],k:a[2],p:a[3],f:a[4],c:a[5],ml:a[6]||0,hf:a[7]||1,bev:a[6]?1:0,k0:a[2],p0:a[3],f0:a[4],c0:a[5]});
 function sc(d,v){d.k=v;['p','f','c'].forEach(x=>d[x]=Math.round((d[x+'0']||0)*v/(d.k0||1)*10)/10)}
