@@ -613,7 +613,7 @@ function layer(){const L=$('#layer'),sh=S.sheet;if(!sh){L.innerHTML='';return}if
  if(sh=='add'){L.innerHTML=W('Tambah '+S.mt,`<div class="n-two"><button class="n-o" onclick="S.sheet='scan';layer()">${SV(HI.cam)}Foto Makanan</button><button class="n-o" onclick="openCat()">${SV('<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>')}Daftar Makanan</button></div>`);return}
  if(sh=='scan'){setTimeout(()=>{try{aiLoad()}catch(e){}},300);L.innerHTML=W('Scan Makanan atau Gambar',`<div class="n-pv"><div class="fb">🥗</div><img src="${FOODIMG}" alt="Contoh makanan" onerror="this.remove()"><div class="vg"></div><i class="ln"></i><span class="tg t1">🥗 Salad sayur</span><span class="tg t2">≈ <b>320 kkal</b></span><span class="tg t3">✨ AI mendeteksi <b>3 item</b></span></div><b style="font-size:13px;color:#0B1F3F">Tips agar hasil lebih akurat</b><div class="n-tips"><div>☀️<br>Good Lighting<small>Gunakan cahaya yang cukup</small></div><div>🔍<br>Top View<small>Posisikan kamera dari atas</small></div><div>🍽<br>Full Plate<small>Makanan masuk dalam foto</small></div></div><button class="n-bt" onclick="S.sheet='cam';layer()">${SV('<path d="M14.500 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3z"/><circle cx="12" cy="13" r="3"/>').replace('<svg','<svg class="sp" width="18" height="18" style="vertical-align:-3px"')}Ambil Foto</button>`);return}
  if(sh=='cam'){const live=!S.photo;L.innerHTML=`<div class="ov n-cm"><div class="n-cv"><button class="n-x" aria-label="Tutup" onclick="closeS()">✕</button><div class="n-vf">${live?'<video id="cv" autoplay playsinline muted></video><div class="gd"></div>':`<img src="${S.photo}" alt="Foto makanan">`}${S.busy?'<i class="ln"></i>':''}<i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i><div class="fl" id="fl"></div>${live?'<div class="msg" id="cmsg">Mengaktifkan kamera…</div>':''}</div><p>${S.busy?'Menganalisis foto…':'Arahkan kamera tepat dari atas makanan agar hasil scan akurat.'}</p><div class="n-ctl"><label class="n-gl" aria-label="Pilih dari galeri">${SV('<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>')}<input type="file" accept="image/*" hidden onchange="analyze(this.files[0])"></label><button class="n-sh2" aria-label="Ambil foto" onclick="shoot()" ${S.busy?'disabled':''}></button><button class="n-fp" aria-label="Balik kamera" onclick="flipCam()">${SV('<path d="M3 7h13l-3-3M21 17H8l3 3"/>')}</button></div><input id="capf" type="file" accept="image/*" capture="environment" hidden onchange="analyze(this.files[0])"></div></div>`;if(live)startCam();return}
- if(sh=='res'){L.innerHTML=W('Hasil Deteksi AI',`<div class="n-sc">${S.photo?`<div class="n-pw" onclick="this.classList.toggle('open')" role="button" aria-label="Perbesar foto"><img class="n-ph" src="${S.photo}" alt="Foto makanan"><span class="n-zm">${SV('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>')}Perbesar</span></div>`:''}<div class="n-ct">${S.draft.length} item terdeteksi</div><div>${rows(S.draft,(d,i)=>`S.edit=${i};S.sheet='dedit';layer()`)}</div></div><div class="n-fx">${tot(S.draft)}<button class="n-add" onclick="openCat()">＋ Tambahkan Daftar Makanan</button><button class="n-bt" style="margin-top:2px" onclick="saveDraft()">Simpan</button></div>`,'','n-res');return}
+ if(sh=='res'){L.innerHTML=W('Hasil Deteksi AI',`<div class="n-sc">${S.photo?`<div class="n-pw" onclick="this.classList.toggle('open')" role="button" aria-label="Perbesar foto"><img class="n-ph" src="${S.photo}" alt="Foto makanan"><span class="n-zm">${SV('<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>')}Perbesar</span></div>`:''}<div class="n-ct">${S.draft.length} item terdeteksi</div><div>${rows(S.draft,(d,i)=>`S.edit=${i};S.sheet='dedit';layer()`)}</div>${aiAlt()}</div><div class="n-fx">${tot(S.draft)}<button class="n-add" onclick="openCat()">＋ Tambahkan Daftar Makanan</button><button class="n-bt" style="margin-top:2px" onclick="saveDraft()">Simpan</button></div>`,'','n-res');return}
  if(sh=='dedit'){const d=S.draft[S.edit];L.innerHTML=W('Edit Details',`<p style="font-weight:700;color:#0B1F3F;margin:2px 0 8px">${d.e||''} ${esc(d.n)}</p><label class="n-lb">Kalori</label><div class="n-in"><input type="number" inputmode="numeric" min="0" value="${d.k}" oninput="sc(S.draft[S.edit],+this.value||0)"><span>kkal</span></div><button class="n-bt" onclick="S.sheet='res';layer()">Simpan</button>`,`<button class="n-hp" onclick="S.draft.splice(S.edit,1);S.draft.length?(S.sheet='res',layer()):closeS()">🗑 Hapus</button>`);return}
  if(sh=='det'){const l=S.items.filter(i=>i.m==S.mt);L.innerHTML=W(S.mt,`<div>${rows(l,d=>`S.edit=${d.id};S.sheet='edit';layer()`)}</div>${tot(l)}<button class="n-bt" onclick="openAdd('${S.mt}')">＋ Tambah makanan</button>`);return}
  if(sh=='cat'){L.innerHTML=W('Daftar Makanan',`<div class="n-seg">${['Semua','Lokal','Internasional'].map(t=>`<button class="${S.flt==t?'on':''}" onclick="S.flt='${t}';layer()">${t}</button>`).join('')}</div><input class="n-q" placeholder="Cari makanan" aria-label="Cari makanan" value="${esc(S.q)}" oninput="S.q=this.value;$('#cl').innerHTML=catRows()"><div id="cl" class="n-cl">${catRows()}</div><div class="n-ft"><span>Terpilih:</span><b id="ct">${selN()} item</b></div><button class="n-bt" onclick="fromCat()">Simpan</button>`,'','n-full')}
@@ -631,55 +631,110 @@ function openCat(){S.sel={};S.q='';S.flt='Semua';S.sheet='cat';layer()}
 function fromCat(){Object.entries(S.sel).forEach(([i,q])=>{const c=CAT[i];S.draft.push(mi([c[0]+(q>1?' ×'+q:''),c[1],c[4]*q,c[5]*q,c[6]*q,c[7]*q,c[8]?c[8]*q:0]))});S.sel={};if(S.draft.length){S.sheet='res';layer()}else closeS()}
 function analyze(f){if(!f)return;const r=new FileReader();r.onload=()=>doAnalyze(r.result);r.readAsDataURL(f)}
 /* ===== AI Deteksi Makanan (gratis, jalan di browser — CLIP via Transformers.js, tanpa API key) ===== */
+const AFx=(pr,n,e,k,p,f,c,ml,hf)=>[pr,n,e,k,p,f,c,ml,hf];
 const AIF=[
-['Indonesian nasi goreng fried rice','Nasi Goreng','🍛',450,12,16,64],['steamed white rice','Nasi Putih','🍚',200,4,.4,44],
-['fried chicken','Ayam Goreng','🍗',260,22,17,6],['grilled chicken','Ayam Bakar','🍗',230,24,12,3],
-['Indonesian mie goreng fried noodles','Mie Goreng','🍜',480,12,18,68],['rendang beef curry','Rendang Daging','🥘',250,22,16,5],
-['gado-gado vegetable salad with peanut sauce','Gado-Gado','🥗',320,12,16,32],['soto ayam chicken soup','Soto Ayam','🍲',300,20,12,28],
-['bakso meatball soup','Bakso','🍲',350,18,14,38],['noodle soup with chicken','Mie Ayam','🍜',560,24,18,70],
-['chicken satay skewers','Sate Ayam','🍢',300,25,15,14],['fried tempeh','Tempe Goreng','🟫',150,10,9,8],['fried tofu','Tahu Goreng','🟨',120,8,8,3],
-['fried egg','Telur Goreng','🍳',90,6,7,.4],['boiled egg','Telur Rebus','🥚',78,6,5,.6],['omelette','Omelet','🍳',154,11,12,1],
-['bubur ayam chicken rice porridge','Bubur Ayam','🥣',350,15,10,50],['rice with assorted side dishes','Nasi Campur','🍛',550,20,18,75],
-['pizza','Pizza (1 slice)','🍕',285,12,10,36],['hamburger','Hamburger','🍔',350,17,17,30],['french fries','Kentang Goreng','🍟',320,4,15,43],
-['spaghetti pasta','Pasta','🍝',390,15,18,42],['sushi','Sushi','🍣',250,12,4,45],['green salad','Salad Sayur','🥗',120,3,7,12],
-['sandwich','Sandwich','🥪',300,14,12,34],['fried banana pisang goreng','Pisang Goreng','🍌',160,1,7,24],['banana','Pisang','🍌',105,1,.4,27],
-['apple','Apel','🍎',95,.5,.3,25],['orange','Jeruk','🍊',62,1,.2,15],['watermelon slices','Semangka','🍉',85,2,.4,21],['avocado','Alpukat','🥑',160,2,15,9],
-['toast bread','Roti Panggang','🍞',130,4,2,24],['oatmeal bowl','Oatmeal','🥣',150,5,3,27],['yogurt','Yogurt','🥛',150,8,4,17],
-['cake','Kue','🍰',350,4,16,48],['ice cream','Es Krim','🍨',210,4,11,24],['donut','Donat','🍩',250,3,13,31],['cookies','Cookies','🍪',160,2,8,21],
-['grilled steak','Steak','🥩',270,26,18,0],['grilled fish','Ikan Bakar','🐟',200,28,9,0],['fried fish','Ikan Goreng','🐟',260,24,15,6],
-['iced sweet tea','Es Teh Manis','🧋',140,0,0,35,300,.9],['coffee with milk','Kopi Susu','☕',120,4,4,15,250,.9],['orange juice','Jus Jeruk','🍊',110,1,0,26,250,.9]];
-const AINF=['a person','a room interior','a landscape','a document with text','an empty plate','a pet animal','a car','a screenshot'];
+/* makanan Indonesia */
+AFx(['Indonesian nasi goreng fried rice with egg','fried rice on a plate'],'Nasi Goreng','🍛',450,12,16,64),
+AFx(['steamed white rice in a bowl','a plate of plain white rice'],'Nasi Putih','🍚',200,4,.4,44),
+AFx(['rice with several side dishes, nasi campur','nasi padang rice with curries'],'Nasi Campur','🍛',550,20,18,75),
+AFx(['yellow turmeric rice nasi kuning','nasi uduk coconut rice'],'Nasi Kuning/Uduk','🍛',350,7,10,56),
+AFx(['deep-fried battered banana fritters','golden fried bananas, pisang goreng','fried banana snack in a container'],'Pisang Goreng','🍌',160,1,7,24),
+AFx(['Indonesian gorengan assorted fried fritters','fried vegetable fritters bakwan'],'Gorengan (1 pcs)','🥟',130,2,8,13),
+AFx(['fried tempeh slices','tempe mendoan'],'Tempe Goreng','🟫',150,10,9,8),
+AFx(['fried tofu cubes','tahu isi stuffed fried tofu'],'Tahu Goreng','🟨',120,8,8,3),
+AFx(['fried chicken pieces','crispy fried chicken drumstick'],'Ayam Goreng','🍗',260,22,17,6),
+AFx(['grilled chicken','ayam bakar grilled chicken with sauce'],'Ayam Bakar','🍗',230,24,12,3),
+AFx(['ayam geprek crispy chicken with sambal'],'Ayam Geprek','🍗',380,25,22,20),
+AFx(['Indonesian mie goreng fried noodles','stir-fried noodles'],'Mie Goreng','🍜',480,12,18,68),
+AFx(['noodle soup with chicken and meatballs, mie ayam','bowl of instant noodles with egg'],'Mie Ayam / Mie Kuah','🍜',560,24,18,70),
+AFx(['rendang beef curry','beef in dark coconut curry'],'Rendang Daging','🥘',250,22,16,5),
+AFx(['gado-gado vegetable salad with peanut sauce','pecel vegetables with peanut sauce'],'Gado-Gado / Pecel','🥗',320,12,16,32),
+AFx(['soto ayam yellow chicken soup','a bowl of Indonesian soup with rice'],'Soto Ayam','🍲',300,20,12,28),
+AFx(['bakso meatball soup','meatballs in broth'],'Bakso','🍲',350,18,14,38),
+AFx(['chicken satay skewers with peanut sauce','grilled meat skewers'],'Sate','🍢',300,25,15,14),
+AFx(['bubur ayam chicken rice porridge','a bowl of congee porridge'],'Bubur Ayam','🥣',350,15,10,50),
+AFx(['siomay or batagor fish dumplings with peanut sauce','dumplings on a plate'],'Siomay / Batagor','🥟',300,14,12,32),
+AFx(['martabak stuffed pancake','thick sweet pancake with chocolate and cheese'],'Martabak','🥞',400,8,18,52),
+AFx(['spring rolls lumpia','risoles fried pastry','pastel fried pastry'],'Lumpia / Risoles / Pastel','🥟',170,4,8,20),
+AFx(['klepon green rice cake balls','traditional Indonesian sweet snack kue'],'Jajan Pasar / Klepon','🟢',110,1,3,21),
+AFx(['kerupuk crackers','prawn crackers'],'Kerupuk','🥠',70,1,3,10),
+AFx(['fried catfish lele goreng','fried whole fish'],'Ikan Goreng','🐟',260,24,15,6),
+AFx(['grilled fish','ikan bakar'],'Ikan Bakar','🐟',200,28,9,0),
+AFx(['fried egg','sunny side up egg'],'Telur Goreng','🍳',90,6,7,.4),
+AFx(['boiled eggs','hard boiled egg'],'Telur Rebus','🥚',78,6,5,.6),
+AFx(['omelette','scrambled eggs'],'Omelet / Telur Dadar','🍳',154,11,12,1),
+/* makanan umum */
+AFx(['a slice of pizza with cheese and toppings','a whole pizza'],'Pizza (1 slice)','🍕',285,12,10,36),
+AFx(['hamburger with bun and patty','cheeseburger'],'Hamburger','🍔',350,17,17,30),
+AFx(['french fries','potato fries'],'Kentang Goreng','🍟',320,4,15,43),
+AFx(['chicken nuggets','breaded fried chicken strips'],'Nugget','🍗',250,13,15,15),
+AFx(['hot dog sausage in bun'],'Hot Dog','🌭',290,10,17,24),
+AFx(['spaghetti pasta with sauce','pasta dish'],'Pasta','🍝',390,15,18,42),
+AFx(['sushi rolls','sashimi and rice'],'Sushi','🍣',250,12,4,45),
+AFx(['ramen noodles in broth'],'Ramen','🍜',500,20,18,65),
+AFx(['green vegetable salad','salad bowl with lettuce and tomato'],'Salad Sayur','🥗',120,3,7,12),
+AFx(['sandwich','toasted sandwich'],'Sandwich','🥪',300,14,12,34),
+AFx(['slices of toasted bread','bread rolls'],'Roti','🍞',130,4,2,24),
+AFx(['oatmeal bowl','granola with milk'],'Oatmeal','🥣',150,5,3,27),
+AFx(['yogurt cup'],'Yogurt','🥛',150,8,4,17),
+AFx(['grilled steak with sides','a cooked beef steak'],'Steak','🥩',270,26,18,0),
+AFx(['vegetable soup in a bowl'],'Sup Sayur','🥣',90,3,3,12),
+AFx(['cooked vegetables, broccoli and carrots','stir-fried vegetables'],'Sayur Tumis','🥦',80,3,4,9),
+/* snack */
+AFx(['sunflower seeds','a pile of sunflower seeds in shells, kuaci'],'Kuaci (30 g)','🌻',175,6,15,6),
+AFx(['roasted peanuts','mixed nuts','almonds'],'Kacang (30 g)','🥜',170,7,15,5),
+AFx(['potato chips in a bag','crispy snack chips'],'Keripik / Chiki','🥔',150,2,9,15),
+AFx(['plain biscuits and crackers','cream sandwich cookies'],'Biskuit (3 pcs)','🍪',140,2,6,20),
+AFx(['cookies','chocolate chip cookies'],'Cookies','🍪',160,2,8,21),
+AFx(['chocolate bar','pieces of chocolate'],'Cokelat (30 g)','🍫',160,2,10,17),
+AFx(['popcorn'],'Popcorn','🍿',110,3,1,22),
+AFx(['candy and sweets','gummy candy'],'Permen','🍬',100,0,0,25),
+AFx(['cake slice','a piece of cake with cream'],'Kue','🍰',350,4,16,48),
+AFx(['donut','doughnuts'],'Donat','🍩',250,3,13,31),
+AFx(['ice cream cone or cup'],'Es Krim','🍨',210,4,11,24),
+/* buah */
+AFx(['bananas','a banana'],'Pisang','🍌',105,1,.4,27),
+AFx(['apple','red apples'],'Apel','🍎',95,.5,.3,25),
+AFx(['oranges','tangerines'],'Jeruk','🍊',62,1,.2,15),
+AFx(['watermelon slices'],'Semangka','🍉',85,2,.4,21),
+AFx(['grapes'],'Anggur','🍇',100,1,.2,26),
+AFx(['strawberries'],'Stroberi','🍓',50,1,.5,12),
+AFx(['mango','papaya','pineapple slices','melon slices'],'Buah Potong','🍍',90,1,.4,22),
+AFx(['avocado','guacamole'],'Alpukat','🥑',160,2,15,9),
+/* minuman */
+AFx(['a glass of plain water','a bottle of drinking water','a mineral water bottle','a glass of clear water'],'Air Putih','💧',0,0,0,0,250,1),
+AFx(['iced sweet tea in a glass','a cup of tea'],'Teh Manis','🧋',140,0,0,35,300,.9),
+AFx(['black coffee in a cup'],'Kopi Hitam','☕',5,0,0,1,200,.9),
+AFx(['coffee with milk, latte','iced coffee with milk'],'Kopi Susu','☕',120,4,4,15,250,.9),
+AFx(['a glass of milk'],'Susu','🥛',120,6,5,9,250,.9),
+AFx(['orange juice in a glass','fruit juice'],'Jus Buah','🍊',110,1,0,26,250,.9),
+AFx(['bubble tea with tapioca pearls'],'Boba','🧋',300,2,5,60,400,.9),
+AFx(['soda soft drink in a can or bottle','cola'],'Minuman Soda','🥤',140,0,0,35,330,.9)];
+const AINF=['a person','a room interior','a landscape','a document with text','an empty plate or container','a pet animal','a car','a screenshot of a phone','a table with objects'];
 let AIP=null;
 function aiLoad(){
  if(AIP)return AIP;
- AIP=import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm').then(m=>m.pipeline('zero-shot-image-classification','Xenova/clip-vit-base-patch32',{progress_callback:p=>{
+ AIP=import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm').then(m=>m.pipeline('zero-shot-image-classification','Xenova/clip-vit-base-patch16',{progress_callback:p=>{
   if(p.status=='progress'&&p.total){const el=document.querySelector('.n-cv p');if(el)el.textContent='Mengunduh AI (sekali saja)… '+Math.round(p.loaded/p.total*100)+'%'}}}));
  AIP.catch(()=>{AIP=null});return AIP}
 async function aiDetect(url){
- const clf=await aiLoad(),labels=AIF.map(f=>'a photo of '+f[0]+', food').concat(AINF.map(x=>'a photo of '+x));
- const r=await clf(url,labels,{hypothesis_template:'{}'});
- const out=[];
- for(const x of r){const i=labels.indexOf(x.label);if(i<0||i>=AIF.length){if(!out.length)return[];continue}
-  if(!out.length&&x.score<.25)return[];
-  if(out.length&&x.score<.2)break;
-  out.push(AIF[i]);if(out.length>=3)break}
- return out}
+ const clf=await aiLoad(),labels=[],own=[];
+ AIF.forEach((f,i)=>f[0].forEach(t=>{labels.push(t);own.push(i)}));
+ AINF.forEach(t=>{labels.push(t);own.push(-1)});
+ const r=await clf(url,labels,{hypothesis_template:'a photo of {}.'});
+ const sc=new Array(AIF.length).fill(0);let nf=0;
+ for(const x of r){const o=own[labels.indexOf(x.label)];if(o<0)nf+=x.score;else sc[o]+=x.score}
+ const rank=sc.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
+ if(rank[0][0]<nf&&rank[0][0]<.3)return[];
+ return rank.slice(0,6).map(x=>AIF[x[1]])}
+function aiPick(i){const a=S.aiAll[i];S.aiSel=i;S.draft=[{...mi(a.slice(1)),ai:1,ak:a[3]},...S.draft.filter(d=>!d.ai)];layer()}
+function aiAlt(){if(!S.aiAll||S.aiAll.length<2)return'';
+ return `<div style="margin:14px 0 6px;font-size:12px;color:#8A94A0">Bukan ini? Pilih yang paling mirip:</div><div style="display:flex;flex-wrap:wrap;gap:8px">${S.aiAll.map((a,i)=>i==S.aiSel?'':`<button onclick="aiPick(${i})" style="border:1px solid #D6E8F7;background:#fff;border-radius:16px;padding:6px 11px;font-size:13px;color:#0B1F3F">${a[2]} ${esc(a[1])}</button>`).join('')}</div>`}
 function doAnalyze(url){stopCam();S.photo=url;S.busy=true;layer();
  aiDetect(url).then(items=>{if(S.sheet!='cam')return;S.busy=false;
   if(!items.length){S.photo=null;layer();toast('Makanan tidak terdeteksi. Coba foto dari atas dengan cahaya cukup.');return}
-  S.draft=items.map(a=>({...mi(a.slice(1)),ai:1,ak:a[3]}));S.sheet='res';layer()})
+  S.aiAll=items;S.aiSel=0;const a=items[0];S.draft=[{...mi(a.slice(1)),ai:1,ak:a[3]}];S.sheet='res';layer()})
  .catch(e=>{console.error(e);if(S.sheet!='cam')return;S.busy=false;S.photo=null;layer();toast('AI gagal dimuat (cek internet). Pilih dari Daftar Makanan.')})}
-/* ===== Kamera nyata (getUserMedia) ===== */
-S.facing='environment';
-function stopCam(){if(S.stream){S.stream.getTracks().forEach(t=>t.stop());S.stream=null}}
-function camMsg(h){const m=$('#cmsg');if(m){m.innerHTML=h;m.style.display='grid'}}
-async function startCam(){const v=$('#cv');if(!v)return;
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camMsg('Kamera tidak didukung di browser ini.<br><button onclick="$(\'#capf\').click()">Gunakan Kamera Bawaan</button>');return}
- try{stopCam();const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:S.facing},width:{ideal:1280},height:{ideal:1280}},audio:false});
-  if(S.sheet!='cam'||S.photo){st.getTracks().forEach(t=>t.stop());return}
-  S.stream=st;const v2=$('#cv');if(!v2){stopCam();return}v2.srcObject=st;await v2.play().catch(()=>{});const m=$('#cmsg');if(m)m.style.display='none'}
- catch(e){const d=e&&e.name=='NotAllowedError';camMsg((d?'Izin kamera ditolak. Aktifkan izin kamera di pengaturan browser, lalu coba lagi.':'Kamera tidak dapat dibuka.')+'<br><button onclick="startCam()">Coba Lagi</button> <button style="background:#2b2f36" onclick="$(\'#capf\').click()">Kamera Bawaan</button>')}}
-function flipCam(){S.facing=S.facing=='environment'?'user':'environment';if(!S.photo&&!S.busy)startCam()}
 function shoot(){const v=$('#cv');if(!v||!S.stream||!v.videoWidth){const f=$('#capf');if(f)f.click();return}
  const mx=1024,k=Math.min(1,mx/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
  const x=c.getContext('2d');x.drawImage(v,0,0,c.width,c.height);
