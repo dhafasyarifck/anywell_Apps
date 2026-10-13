@@ -635,12 +635,12 @@ const AFx=(pr,n,e,k,p,f,c,ml,hf)=>[pr,n,e,k,p,f,c,ml,hf];
 const AIF=[
 /* makanan Indonesia */
 AFx(['Indonesian nasi goreng fried rice with egg','fried rice on a plate'],'Nasi Goreng','🍛',450,12,16,64),
-AFx(['steamed white rice in a bowl','a plate of plain white rice'],'Nasi Putih','🍚',200,4,.4,44),
+AFx(['steamed white rice in a bowl','a plate of plain white rice','white rice on a banana leaf'],'Nasi Putih','🍚',200,4,.4,44),
 AFx(['rice with several side dishes, nasi campur','nasi padang rice with curries'],'Nasi Campur','🍛',550,20,18,75),
 AFx(['yellow turmeric rice nasi kuning','nasi uduk coconut rice'],'Nasi Kuning/Uduk','🍛',350,7,10,56),
 AFx(['deep-fried battered banana fritters','golden fried bananas, pisang goreng','fried banana snack in a container'],'Pisang Goreng','🍌',160,1,7,24),
 AFx(['Indonesian gorengan assorted fried fritters','fried vegetable fritters bakwan'],'Gorengan (1 pcs)','🥟',130,2,8,13),
-AFx(['fried tempeh slices','tempe mendoan'],'Tempe Goreng','🟫',150,10,9,8),
+AFx(['fried tempeh slices','tempe mendoan','stir-fried tempeh in sweet soy sauce, tempe orek'],'Tempe Goreng','🟫',150,10,9,8),
 AFx(['fried tofu cubes','tahu isi stuffed fried tofu'],'Tahu Goreng','🟨',120,8,8,3),
 AFx(['fried chicken pieces','crispy fried chicken drumstick'],'Ayam Goreng','🍗',260,22,17,6),
 AFx(['grilled chicken','ayam bakar grilled chicken with sauce'],'Ayam Bakar','🍗',230,24,12,3),
@@ -660,6 +660,7 @@ AFx(['klepon green rice cake balls','traditional Indonesian sweet snack kue'],'J
 AFx(['kerupuk crackers','prawn crackers'],'Kerupuk','🥠',70,1,3,10),
 AFx(['fried catfish lele goreng','fried whole fish'],'Ikan Goreng','🐟',260,24,15,6),
 AFx(['grilled fish','ikan bakar'],'Ikan Bakar','🐟',200,28,9,0),
+AFx(['chili sambal sauce in a small cup','red chili sauce'],'Sambal','🌶️',20,0,1,3),
 AFx(['fried egg','sunny side up egg'],'Telur Goreng','🍳',90,6,7,.4),
 AFx(['boiled eggs','hard boiled egg'],'Telur Rebus','🥚',78,6,5,.6),
 AFx(['omelette','scrambled eggs'],'Omelet / Telur Dadar','🍳',154,11,12,1),
@@ -717,23 +718,36 @@ function aiLoad(){
  AIP=import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/+esm').then(m=>m.pipeline('zero-shot-image-classification','Xenova/clip-vit-base-patch16',{progress_callback:p=>{
   if(p.status=='progress'&&p.total){const el=document.querySelector('.n-cv p');if(el)el.textContent='Mengunduh AI (sekali saja)… '+Math.round(p.loaded/p.total*100)+'%'}}}));
  AIP.catch(()=>{AIP=null});return AIP}
+function aiCrops(url){return new Promise(res=>{const im=new Image();im.onload=()=>{
+ const W=im.naturalWidth,H=im.naturalHeight,m=Math.min(W,H),q=m*.7,cx=(W-m)/2,cy=(H-m)/2,mx=(W-q)/2,my=(H-q)/2;
+ const pos=[[cx,cy,m],[0,0,q],[W-q,0,q],[0,H-q,q],[W-q,H-q,q],[mx,my,q]];
+ res(pos.map(([x,y,z])=>{const c=document.createElement('canvas'),k=Math.min(1,320/z);c.width=c.height=Math.round(z*k);c.getContext('2d').drawImage(im,x,y,z,z,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85)}))};
+ im.onerror=()=>res([url]);im.src=url})}
 async function aiDetect(url){
  const clf=await aiLoad(),labels=[],own=[];
  AIF.forEach((f,i)=>f[0].forEach(t=>{labels.push(t);own.push(i)}));
  AINF.forEach(t=>{labels.push(t);own.push(-1)});
- const r=await clf(url,labels,{hypothesis_template:'a photo of {}.'});
- const sc=new Array(AIF.length).fill(0);let nf=0;
- for(const x of r){const o=own[labels.indexOf(x.label)];if(o<0)nf+=x.score;else sc[o]+=x.score}
- const rank=sc.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
- if(rank[0][0]<nf&&rank[0][0]<.3)return[];
- return rank.slice(0,6).map(x=>AIF[x[1]])}
-function aiPick(i){const a=S.aiAll[i];S.aiSel=i;S.draft=[{...mi(a.slice(1)),ai:1,ak:a[3]},...S.draft.filter(d=>!d.ai)];layer()}
-function aiAlt(){if(!S.aiAll||S.aiAll.length<2)return'';
- return `<div style="margin:14px 0 6px;font-size:12px;color:#8A94A0">Bukan ini? Pilih yang paling mirip:</div><div style="display:flex;flex-wrap:wrap;gap:8px">${S.aiAll.map((a,i)=>i==S.aiSel?'':`<button onclick="aiPick(${i})" style="border:1px solid #D6E8F7;background:#fff;border-radius:16px;padding:6px 11px;font-size:13px;color:#0B1F3F">${a[2]} ${esc(a[1])}</button>`).join('')}</div>`}
+ const crops=await aiCrops(url);
+ let R=await clf(crops,labels,{hypothesis_template:'a photo of {}.'});
+ if(!Array.isArray(R[0]))R=[R];
+ const best=new Array(AIF.length).fill(0),hits=new Array(AIF.length).fill(0);
+ R.forEach((r,ci)=>{const sc=new Array(AIF.length).fill(0);let nf=0;
+  for(const x of r){const o=own[labels.indexOf(x.label)];if(o<0)nf+=x.score;else sc[o]+=x.score}
+  const rk=sc.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
+  rk.slice(0,2).forEach(([v,i])=>{if(v>=.3&&v>nf){hits[i]++;best[i]=Math.max(best[i],v)}});
+  rk.forEach(([v,i])=>{if(best[i]<v*.5)best[i]=v*.5})});
+ const rank=best.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
+ const sel=rank.filter(([v,i])=>hits[i]&&(v>=.55||hits[i]>=2)).slice(0,4).map(x=>AIF[x[1]]);
+ const all=rank.slice(0,10).map(x=>AIF[x[1]]);
+ if(!sel.length){const t=rank[0];if(t[0]>=.2)sel.push(AIF[t[1]])}
+ return{sel,all}}
+function aiPick(i){const a=S.aiAll[i];S.draft.push({...mi(a.slice(1)),ai:1,ak:a[3]});layer()}
+function aiAlt(){const have=new Set(S.draft.map(d=>d.n)),l=(S.aiAll||[]).map((a,i)=>[a,i]).filter(([a])=>!have.has(a[1])).slice(0,6);if(!l.length)return'';
+ return `<div style="margin:14px 0 6px;font-size:12px;color:#8A94A0">Ada yang kurang? Ketuk untuk menambahkan (salah? ketuk item di atas lalu Hapus):</div><div style="display:flex;flex-wrap:wrap;gap:8px">${l.map(([a,i])=>`<button onclick="aiPick(${i})" style="border:1px solid #D6E8F7;background:#fff;border-radius:16px;padding:6px 11px;font-size:13px;color:#0B1F3F">＋ ${a[2]} ${esc(a[1])}</button>`).join('')}</div>`}
 function doAnalyze(url){stopCam();S.photo=url;S.busy=true;layer();
- aiDetect(url).then(items=>{if(S.sheet!='cam')return;S.busy=false;
-  if(!items.length){S.photo=null;layer();toast('Makanan tidak terdeteksi. Coba foto dari atas dengan cahaya cukup.');return}
-  S.aiAll=items;S.aiSel=0;const a=items[0];S.draft=[{...mi(a.slice(1)),ai:1,ak:a[3]}];S.sheet='res';layer()})
+ aiDetect(url).then(r=>{if(S.sheet!='cam')return;S.busy=false;
+  if(!r.sel.length){S.photo=null;layer();toast('Makanan tidak terdeteksi. Coba foto dari atas dengan cahaya cukup.');return}
+  S.aiAll=r.all;S.draft=r.sel.map(a=>({...mi(a.slice(1)),ai:1,ak:a[3]}));S.sheet='res';layer()})
  .catch(e=>{console.error(e);if(S.sheet!='cam')return;S.busy=false;S.photo=null;layer();toast('AI gagal dimuat (cek internet). Pilih dari Daftar Makanan.')})}
 /* ===== Kamera nyata (getUserMedia) ===== */
 S.facing='environment';
@@ -745,8 +759,7 @@ async function startCam(){const v=$('#cv');if(!v)return;
   if(S.sheet!='cam'||S.photo){st.getTracks().forEach(t=>t.stop());return}
   S.stream=st;const v2=$('#cv');if(!v2){stopCam();return}v2.srcObject=st;await v2.play().catch(()=>{});const m=$('#cmsg');if(m)m.style.display='none'}
  catch(e){const d=e&&e.name=='NotAllowedError';camMsg((d?'Izin kamera ditolak. Aktifkan izin kamera di pengaturan browser, lalu coba lagi.':'Kamera tidak dapat dibuka.')+'<br><button onclick="startCam()">Coba Lagi</button> <button style="background:#2b2f36" onclick="$(\'#capf\').click()">Kamera Bawaan</button>')}}
-function flipCam(){S.facing=S.facing=='environment'?'user':'environment';if(!S.photo&&!S.busy)startCam()}
-function shoot(){const v=$('#cv');if(!v||!S.stream||!v.videoWidth){const f=$('#capf');if(f)f.click();return}
+function flipCam(){S.facing=S.facing=='environment'?'user':'environment';if(!S.photo&&!S.busy)startCam()}function shoot(){const v=$('#cv');if(!v||!S.stream||!v.videoWidth){const f=$('#capf');if(f)f.click();return}
  const mx=1024,k=Math.min(1,mx/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
  const x=c.getContext('2d');x.drawImage(v,0,0,c.width,c.height);
  const fl=$('#fl');if(fl)fl.classList.add('on');if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}
