@@ -735,6 +735,17 @@ function doAnalyze(url){stopCam();S.photo=url;S.busy=true;layer();
   if(!items.length){S.photo=null;layer();toast('Makanan tidak terdeteksi. Coba foto dari atas dengan cahaya cukup.');return}
   S.aiAll=items;S.aiSel=0;const a=items[0];S.draft=[{...mi(a.slice(1)),ai:1,ak:a[3]}];S.sheet='res';layer()})
  .catch(e=>{console.error(e);if(S.sheet!='cam')return;S.busy=false;S.photo=null;layer();toast('AI gagal dimuat (cek internet). Pilih dari Daftar Makanan.')})}
+/* ===== Kamera nyata (getUserMedia) ===== */
+S.facing='environment';
+function stopCam(){if(S.stream){S.stream.getTracks().forEach(t=>t.stop());S.stream=null}}
+function camMsg(h){const m=$('#cmsg');if(m){m.innerHTML=h;m.style.display='grid'}}
+async function startCam(){const v=$('#cv');if(!v)return;
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camMsg('Kamera tidak didukung di browser ini.<br><button onclick="$(\'#capf\').click()">Gunakan Kamera Bawaan</button>');return}
+ try{stopCam();const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:S.facing},width:{ideal:1280},height:{ideal:1280}},audio:false});
+  if(S.sheet!='cam'||S.photo){st.getTracks().forEach(t=>t.stop());return}
+  S.stream=st;const v2=$('#cv');if(!v2){stopCam();return}v2.srcObject=st;await v2.play().catch(()=>{});const m=$('#cmsg');if(m)m.style.display='none'}
+ catch(e){const d=e&&e.name=='NotAllowedError';camMsg((d?'Izin kamera ditolak. Aktifkan izin kamera di pengaturan browser, lalu coba lagi.':'Kamera tidak dapat dibuka.')+'<br><button onclick="startCam()">Coba Lagi</button> <button style="background:#2b2f36" onclick="$(\'#capf\').click()">Kamera Bawaan</button>')}}
+function flipCam(){S.facing=S.facing=='environment'?'user':'environment';if(!S.photo&&!S.busy)startCam()}
 function shoot(){const v=$('#cv');if(!v||!S.stream||!v.videoWidth){const f=$('#capf');if(f)f.click();return}
  const mx=1024,k=Math.min(1,mx/Math.max(v.videoWidth,v.videoHeight)),c=document.createElement('canvas');c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);
  const x=c.getContext('2d');x.drawImage(v,0,0,c.width,c.height);
