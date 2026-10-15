@@ -672,7 +672,10 @@ AFx(['chicken nuggets','breaded fried chicken strips'],'Nugget','🍗',250,13,15
 AFx(['hot dog sausage in bun'],'Hot Dog','🌭',290,10,17,24),
 AFx(['spaghetti pasta with sauce','pasta dish'],'Pasta','🍝',390,15,18,42),
 AFx(['sushi rolls','sashimi and rice'],'Sushi','🍣',250,12,4,45),
-AFx(['ramen noodles in broth'],'Ramen','🍜',500,20,18,65),
+AFx(['ramen noodles in broth','japanese ramen with sliced beef and a boiled egg','a large bowl of noodle soup with meat and egg'],'Ramen','🍜',500,20,18,65),
+AFx(['sushi roll topped with orange fish roe','sushi rolls arranged on a long plate','maki rolls with tobiko'],'Sushi Roll (±8 pcs)','🍣',400,14,10,62),
+AFx(['chicken katsu rice bowl','a bowl of rice topped with fried chicken cutlet and egg','japanese donburi rice bowl'],'Chicken Katsu Don','🍛',600,25,20,78),
+AFx(['a cup of unsweetened green tea or ocha','iced tea in a ceramic japanese cup'],'Ocha / Teh Tawar','🍵',5,0,0,1,200,.9),
 AFx(['green vegetable salad','salad bowl with lettuce and tomato'],'Salad Sayur','🥗',120,3,7,12),
 AFx(['sandwich','toasted sandwich'],'Sandwich','🥪',300,14,12,34),
 AFx(['slices of toasted bread','bread rolls'],'Roti','🍞',130,4,2,24),
@@ -711,7 +714,8 @@ AFx(['a glass of milk'],'Susu','🥛',120,6,5,9,250,.9),
 AFx(['orange juice in a glass','fruit juice'],'Jus Buah','🍊',110,1,0,26,250,.9),
 AFx(['bubble tea with tapioca pearls'],'Boba','🧋',300,2,5,60,400,.9),
 AFx(['soda soft drink in a can or bottle','cola'],'Minuman Soda','🥤',140,0,0,35,330,.9)];
-const AINF=['a person','a room interior','a landscape','a document with text','an empty plate or container','a pet animal','a car','a screenshot of a phone','a table with objects'];
+const AINF=['a person','a smiling person','a hand giving thumbs up','a room interior','a restaurant interior','a wooden wall and furniture','a granite countertop table','a landscape','a document with text','an empty plate or container','a pet animal','a car','a screenshot of a phone','a smartphone on a table','a table with objects','a teapot','chopsticks','a shopping mall'];
+const AIFAM={'Ramen':'noodle','Mie Ayam / Mie Kuah':'noodle','Sushi':'sushi','Sushi Roll (±8 pcs)':'sushi','Teh Manis':'tea','Ocha / Teh Tawar':'tea','Nasi Putih':'rice','Chicken Katsu Don':'rice'};
 let AIP=null;
 function aiLoad(){
  if(AIP)return AIP;
@@ -719,28 +723,33 @@ function aiLoad(){
   if(p.status=='progress'&&p.total){const el=document.querySelector('.n-cv p');if(el)el.textContent='Mengunduh AI (sekali saja)… '+Math.round(p.loaded/p.total*100)+'%'}}}));
  AIP.catch(()=>{AIP=null});return AIP}
 function aiCrops(url){return new Promise(res=>{const im=new Image();im.onload=()=>{
- const W=im.naturalWidth,H=im.naturalHeight,m=Math.min(W,H),q=m*.7,cx=(W-m)/2,cy=(H-m)/2,mx=(W-q)/2,my=(H-q)/2;
- const pos=[[cx,cy,m],[0,0,q],[W-q,0,q],[0,H-q,q],[W-q,H-q,q],[mx,my,q]];
- res(pos.map(([x,y,z])=>{const c=document.createElement('canvas'),k=Math.min(1,320/z);c.width=c.height=Math.round(z*k);c.getContext('2d').drawImage(im,x,y,z,z,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85)}))};
- im.onerror=()=>res([url]);im.src=url})}
+  const W=im.naturalWidth,H=im.naturalHeight,m=Math.min(W,H),out=[];
+  const add=(x,y,w,h)=>{const c=document.createElement('canvas'),k=Math.min(1,256/Math.max(w,h));c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext('2d').drawImage(im,x,y,w,h,0,0,c.width,c.height);out.push(c.toDataURL('image/jpeg',.85))};
+  const pos=(L,s)=>{const n=Math.max(1,Math.ceil((L-s)/(s*.75))+1);return n==1?[(L-s)/2]:Array.from({length:n},(_,i)=>(L-s)*i/(n-1))};
+  add((W-m)/2,(H-m)/2,m,m);
+  [.75,.5].forEach(f=>{const s=m*f;pos(W,s).forEach(x=>pos(H,s).forEach(y=>add(x,y,s,s)))});
+  res(out)};im.onerror=()=>res([url]);im.src=url})}
 async function aiDetect(url){
- const clf=await aiLoad(),labels=[],own=[];
- AIF.forEach((f,i)=>f[0].forEach(t=>{labels.push(t);own.push(i)}));
- AINF.forEach(t=>{labels.push(t);own.push(-1)});
- const crops=await aiCrops(url);
- let R=await clf(crops,labels,{hypothesis_template:'a photo of {}.'});
- if(!Array.isArray(R[0]))R=[R];
- const best=new Array(AIF.length).fill(0),hits=new Array(AIF.length).fill(0);
- R.forEach((r,ci)=>{const sc=new Array(AIF.length).fill(0);let nf=0;
-  for(const x of r){const o=own[labels.indexOf(x.label)];if(o<0)nf+=x.score;else sc[o]+=x.score}
-  const rk=sc.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
-  rk.slice(0,2).forEach(([v,i])=>{if(v>=.3&&v>nf){hits[i]++;best[i]=Math.max(best[i],v)}});
-  rk.forEach(([v,i])=>{if(best[i]<v*.5)best[i]=v*.5})});
- const rank=best.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
- const sel=rank.filter(([v,i])=>hits[i]&&(v>=.55||hits[i]>=2)).slice(0,4).map(x=>AIF[x[1]]);
- const all=rank.slice(0,10).map(x=>AIF[x[1]]);
- if(!sel.length){const t=rank[0];if(t[0]>=.2)sel.push(AIF[t[1]])}
- return{sel,all}}
+  const clf=await aiLoad(),labels=[],own=[],n=AIF.length;
+  AIF.forEach((f,i)=>f[0].forEach(t=>{labels.push(t);own.push(i)}));
+  AINF.forEach(t=>{labels.push(t);own.push(-1)});
+  const idx=new Map();labels.forEach((l,i)=>{if(!idx.has(l))idx.set(l,i)});
+  const crops=await aiCrops(url);
+  let R=await clf(crops,labels,{hypothesis_template:'a photo of {}.'});
+  if(!Array.isArray(R[0]))R=[R];
+  const best=new Array(n).fill(0),hits=new Array(n).fill(0);
+  R.forEach(r=>{const sc=new Array(n).fill(0);let nf=0;
+   for(const x of r){const o=own[idx.get(x.label)];if(o<0)nf+=x.score;else sc[o]+=x.score}
+   const rk=sc.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]),t=rk[0][0];
+   rk.slice(0,3).forEach(([v,i],j)=>{if(v>=.2&&v>nf*.7&&(j==0||v>=t*.45)){hits[i]++;best[i]=Math.max(best[i],v)}});
+   rk.forEach(([v,i])=>{if(best[i]<v*.5)best[i]=v*.5})});
+  const rank=best.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]);
+  const cand=rank.filter(([v,i])=>hits[i]&&(hits[i]>=2||v>=.55)).map(([v,i])=>[v+.05*hits[i],i]).sort((a,b)=>b[0]-a[0]);
+  const fam=new Set(),sel=[];
+  for(const [,i] of cand){const g=AIFAM[AIF[i][1]];if(g&&fam.has(g))continue;if(g)fam.add(g);sel.push(AIF[i]);if(sel.length>=6)break}
+  const all=rank.slice(0,12).map(x=>AIF[x[1]]);
+  if(!sel.length){const t=rank[0];if(t[0]>=.2)sel.push(AIF[t[1]])}
+  return{sel,all}}
 function aiPick(i){const a=S.aiAll[i];S.draft.push({...mi(a.slice(1)),ai:1,ak:a[3]});layer()}
 function aiAlt(){const have=new Set(S.draft.map(d=>d.n)),l=(S.aiAll||[]).map((a,i)=>[a,i]).filter(([a])=>!have.has(a[1])).slice(0,6);if(!l.length)return'';
  return `<div style="margin:14px 0 6px;font-size:12px;color:#8A94A0">Ada yang kurang? Ketuk untuk menambahkan (salah? ketuk item di atas lalu Hapus):</div><div style="display:flex;flex-wrap:wrap;gap:8px">${l.map(([a,i])=>`<button onclick="aiPick(${i})" style="border:1px solid #D6E8F7;background:#fff;border-radius:16px;padding:6px 11px;font-size:13px;color:#0B1F3F">＋ ${a[2]} ${esc(a[1])}</button>`).join('')}</div>`}
